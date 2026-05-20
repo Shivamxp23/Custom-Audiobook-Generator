@@ -69,18 +69,25 @@ export default function Upload() {
       // Start background audio pre-generation immediately
       setStep("Starting audio generation…"); setProgress(90);
       const { data: profile } = await supabase.from("profiles").select("groq_api_key").eq("user_id", user.id).single();
-      const apiKey = profile?.groq_api_key || "";
+      const profileKey = profile?.groq_api_key || "";
+      const localKey = localStorage.getItem("groq_api_key") || "";
+      const resolvedKey = profileKey || localKey;
+
+      // Sync keys between sources if needed
+      if (localKey && !profileKey) {
+        supabase.from("profiles").update({ groq_api_key: localKey }).eq("user_id", user.id).then(() => {});
+      }
 
       audioPregenService.start(
         book.id,
         user.id,
         pages.map(p => ({ page: p.page, text: p.text, words: p.words })),
         voice,
-        apiKey
+        resolvedKey
       );
 
       setProgress(100);
-      toast({ title: "Book added!", description: "Audio is being generated in the background. Opening the reader…" });
+      toast({ title: "Book added!", description: "Audio is being generated in the background — even if you close this tab." });
       navigate(`/read/${book.id}`);
     } catch (e: any) {
       toast({ title: "Upload failed", description: e.message, variant: "destructive" });

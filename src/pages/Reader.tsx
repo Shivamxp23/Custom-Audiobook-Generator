@@ -175,7 +175,7 @@ export default function Reader() {
         ? b.voice_description : "daniel";
       
       if (!resolvedApiKey) {
-        console.warn("[Reader] No Groq API key found — pre-generation will rely on server env var GROQ_TTS");
+        console.warn("[Reader] No Groq API key found — pre-generation may fail. Set your key in Settings.");
       }
 
       audioPregenService.start(

@@ -70,6 +70,41 @@ export type Database = {
           },
         ]
       }
+      book_pages: {
+        Row: {
+          id: string
+          book_id: string
+          page_number: number
+          text: string
+          word_count: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          book_id: string
+          page_number: number
+          text?: string
+          word_count?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          book_id?: string
+          page_number?: number
+          text?: string
+          word_count?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_pages_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       page_audio_cache: {
         Row: {
           id: string
@@ -81,6 +116,7 @@ export type Database = {
           duration_seconds: number | null
           word_timings: Json | null
           status: string
+          priority: number
           created_at: string
         }
         Insert: {
@@ -93,6 +129,7 @@ export type Database = {
           duration_seconds?: number | null
           word_timings?: Json | null
           status?: string
+          priority?: number
           created_at?: string
         }
         Update: {
@@ -105,6 +142,7 @@ export type Database = {
           duration_seconds?: number | null
           word_timings?: Json | null
           status?: string
+          priority?: number
           created_at?: string
         }
         Relationships: [
