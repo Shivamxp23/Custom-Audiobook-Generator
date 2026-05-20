@@ -1,0 +1,320 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 35 30% 97%;
+    --foreground: 25 25% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 25 25% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 25 25% 12%;
+
+    --primary: 25 70% 35%;
+    --primary-foreground: 35 30% 97%;
+    --primary-glow: 30 80% 55%;
+
+    --secondary: 35 20% 92%;
+    --secondary-foreground: 25 25% 12%;
+
+    --muted: 35 15% 90%;
+    --muted-foreground: 25 10% 45%;
+
+    --accent: 30 60% 88%;
+    --accent-foreground: 25 50% 25%;
+
+    --highlight: 45 95% 60%;
+    --highlight-foreground: 25 50% 15%;
+
+    --destructive: 0 75% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 30 15% 85%;
+    --input: 30 15% 88%;
+    --ring: 25 70% 35%;
+
+    --radius: 0.75rem;
+
+    --gradient-warm: linear-gradient(135deg, hsl(25 70% 35%), hsl(30 80% 55%));
+    --gradient-paper: linear-gradient(180deg, hsl(35 30% 97%), hsl(35 25% 93%));
+    --gradient-hero: linear-gradient(135deg, hsl(25 35% 8%) 0%, hsl(20 40% 14%) 40%, hsl(30 50% 18%) 100%);
+    --shadow-book: 0 10px 40px -15px hsl(25 50% 25% / 0.25);
+    --shadow-soft: 0 2px 12px -4px hsl(25 30% 20% / 0.1);
+    --shadow-glow: 0 0 30px -5px hsl(30 80% 55% / 0.3);
+
+    --sidebar-background: 30 25% 95%;
+    --sidebar-foreground: 25 25% 15%;
+    --sidebar-primary: 25 70% 35%;
+    --sidebar-primary-foreground: 35 30% 97%;
+    --sidebar-accent: 35 20% 88%;
+    --sidebar-accent-foreground: 25 25% 15%;
+    --sidebar-border: 30 15% 82%;
+    --sidebar-ring: 25 70% 35%;
+  }
+
+  .dark {
+    --background: 25 20% 8%;
+    --foreground: 35 25% 92%;
+    --card: 25 18% 11%;
+    --card-foreground: 35 25% 92%;
+    --popover: 25 18% 11%;
+    --popover-foreground: 35 25% 92%;
+    --primary: 30 80% 60%;
+    --primary-foreground: 25 30% 10%;
+    --primary-glow: 35 90% 70%;
+    --secondary: 25 12% 16%;
+    --secondary-foreground: 35 25% 92%;
+    --muted: 25 10% 18%;
+    --muted-foreground: 30 15% 60%;
+    --accent: 25 15% 22%;
+    --accent-foreground: 35 25% 92%;
+    --highlight: 45 95% 55%;
+    --highlight-foreground: 25 50% 10%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 25 10% 22%;
+    --input: 25 10% 20%;
+    --ring: 30 80% 60%;
+    --gradient-warm: linear-gradient(135deg, hsl(25 50% 25%), hsl(30 70% 45%));
+    --gradient-paper: linear-gradient(180deg, hsl(25 18% 11%), hsl(25 15% 8%));
+    --gradient-hero: linear-gradient(135deg, hsl(25 20% 5%) 0%, hsl(20 30% 8%) 40%, hsl(30 35% 12%) 100%);
+    --shadow-book: 0 10px 40px -10px hsl(0 0% 0% / 0.5);
+    --shadow-soft: 0 2px 12px -4px hsl(0 0% 0% / 0.3);
+    --shadow-glow: 0 0 30px -5px hsl(30 80% 55% / 0.15);
+    --sidebar-background: 25 18% 10%;
+    --sidebar-foreground: 35 20% 88%;
+    --sidebar-primary: 30 80% 60%;
+    --sidebar-primary-foreground: 25 30% 10%;
+    --sidebar-accent: 25 12% 16%;
+    --sidebar-accent-foreground: 35 20% 88%;
+    --sidebar-border: 25 10% 20%;
+    --sidebar-ring: 30 80% 60%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  /* ---- Word highlighting in reader ---- */
+  .reading-word {
+    @apply transition-all duration-150 rounded-sm px-[1px] py-[1px] cursor-pointer;
+  }
+  .reading-word:hover {
+    background-color: hsl(var(--accent));
+  }
+  .reading-word.is-active {
+    background-color: hsl(var(--highlight));
+    color: hsl(var(--highlight-foreground));
+    font-weight: 600;
+    box-shadow: 0 0 12px -2px hsl(var(--highlight) / 0.5);
+    transform: scale(1.02);
+  }
+  .reading-word.is-read {
+    color: hsl(var(--muted-foreground));
+  }
+  .reading-word.is-resume {
+    background-color: hsl(var(--primary) / 0.15);
+    border-bottom: 2px solid hsl(var(--primary));
+    font-weight: 600;
+  }
+
+  /* ---- PDF word overlay highlighting ---- */
+  .pdf-page-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    overflow: hidden;
+  }
+  .pdf-page-container .react-pdf__Document {
+    line-height: 0;
+    display: flex;
+    justify-content: center;
+  }
+  .pdf-page-container .react-pdf__Page {
+    display: flex;
+    justify-content: center;
+  }
+  .pdf-page-container canvas {
+    display: block;
+    max-width: 100%;
+    height: auto !important;
+  }
+
+  .pdf-word-overlay {
+    opacity: 0;
+  }
+  .pdf-word-overlay:hover {
+    opacity: 1;
+    background-color: hsl(var(--accent) / 0.3);
+  }
+  .pdf-word-overlay.pdf-word-active {
+    opacity: 1;
+    background-color: hsl(var(--highlight) / 0.5);
+    box-shadow: 0 0 14px -2px hsl(var(--highlight) / 0.6);
+    outline: 2px solid hsl(var(--highlight) / 0.8);
+    z-index: 10;
+    animation: wordPulse 1.2s ease-in-out infinite;
+  }
+  .pdf-word-overlay.pdf-word-read {
+    opacity: 1;
+    background-color: hsl(var(--primary) / 0.08);
+  }
+  .pdf-word-overlay.pdf-word-resume {
+    opacity: 1;
+    background-color: hsl(var(--primary) / 0.2);
+    outline: 2px solid hsl(var(--primary) / 0.6);
+    z-index: 10;
+    animation: resumePulse 2s ease-in-out infinite;
+  }
+
+  @keyframes wordPulse {
+    0%, 100% { box-shadow: 0 0 14px -2px hsl(var(--highlight) / 0.6); }
+    50% { box-shadow: 0 0 22px -2px hsl(var(--highlight) / 0.9); }
+  }
+
+  @keyframes resumePulse {
+    0%, 100% { outline-color: hsl(var(--primary) / 0.6); }
+    50% { outline-color: hsl(var(--primary) / 0.3); }
+  }
+
+  /* ---- Landing page ---- */
+  .hero-gradient {
+    background: var(--gradient-hero);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-gradient::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 60% 50% at 50% 0%, hsl(30 80% 55% / 0.08), transparent),
+                radial-gradient(ellipse 40% 60% at 80% 100%, hsl(25 70% 40% / 0.06), transparent);
+    pointer-events: none;
+  }
+
+  .float-animation {
+    animation: float 6s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-12px); }
+  }
+
+  .pulse-glow {
+    animation: pulseGlow 3s ease-in-out infinite;
+  }
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 20px -5px hsl(30 80% 55% / 0.3); }
+    50% { box-shadow: 0 0 40px -5px hsl(30 80% 55% / 0.5); }
+  }
+
+  .slide-up {
+    animation: slideUp 0.8s ease-out;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-in {
+    animation: fadeIn 1s ease-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .stagger-1 { animation-delay: 0.1s; animation-fill-mode: both; }
+  .stagger-2 { animation-delay: 0.2s; animation-fill-mode: both; }
+  .stagger-3 { animation-delay: 0.3s; animation-fill-mode: both; }
+  .stagger-4 { animation-delay: 0.4s; animation-fill-mode: both; }
+
+  /* Glass card effect */
+  .glass-card {
+    background: hsl(0 0% 100% / 0.06);
+    backdrop-filter: blur(12px);
+    border: 1px solid hsl(0 0% 100% / 0.1);
+  }
+
+  /* Sound wave bars */
+  .sound-wave {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 24px;
+  }
+  .sound-wave span {
+    display: block;
+    width: 3px;
+    border-radius: 99px;
+    background: hsl(30 80% 55%);
+  }
+  .sound-wave.playing span {
+    animation: wave 1.2s ease-in-out infinite;
+  }
+  .sound-wave span:nth-child(1) { animation-delay: 0s; height: 30%; }
+  .sound-wave span:nth-child(2) { animation-delay: 0.15s; height: 60%; }
+  .sound-wave span:nth-child(3) { animation-delay: 0.3s; height: 100%; }
+  .sound-wave span:nth-child(4) { animation-delay: 0.45s; height: 50%; }
+  .sound-wave span:nth-child(5) { animation-delay: 0.6s; height: 80%; }
+
+  @keyframes wave {
+    0%, 100% { transform: scaleY(0.5); }
+    50% { transform: scaleY(1.2); }
+  }
+
+  /* Serif font for book text */
+  .font-serif-book {
+    font-family: 'Playfair Display', 'Georgia', serif;
+  }
+}
+
+/* react-pdf text layer — invisible but positioned for word extraction */
+.react-pdf__Page__textContent,
+.textLayer {
+  position: absolute !important;
+  inset: 0;
+  overflow: hidden;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  line-height: 1;
+}
+.react-pdf__Page__textContent span,
+.textLayer span { color: transparent; position: absolute; white-space: pre; cursor: text; transform-origin: 0% 0%; }
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }
+
+/* iOS safe area for fixed bottom nav */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Mobile: larger tap targets, no hover effects */
+@media (max-width: 640px) {
+  .reading-word { padding: 1px 0; }
+  .reading-word:hover { background: transparent; }
+}
+
+/* Accessibility: reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
