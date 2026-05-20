@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,39 +23,86 @@ export default function Settings() {
   
   const [loading, setLoading] = useState(true);
 
-  // Load existing key
+  // Load existing key from BOTH localStorage and Supabase profiles
   useEffect(() => {
-    const storedKey = localStorage.getItem("groq_api_key");
-    if (storedKey) {
-      setApiKey(storedKey);
-      setHasKey(true);
-    }
-    const storedElKey = localStorage.getItem("elevenlabs_api_key");
-    if (storedElKey) {
-      setElApiKey(storedElKey);
-      setHasElKey(true);
-    }
-    setLoading(false);
-  }, []);
+    (async () => {
+      // Check localStorage first (fast)
+      const storedKey = localStorage.getItem("groq_api_key");
+      if (storedKey) {
+        setApiKey(storedKey);
+        setHasKey(true);
+      }
 
-  const saveKey = () => {
+      // Also check Supabase profiles (source of truth for Reader/pregen)
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("groq_api_key")
+          .eq("user_id", user.id)
+          .single();
+        if (profile?.groq_api_key) {
+          // If Supabase has a key but localStorage doesn't, sync it
+          if (!storedKey) {
+            setApiKey(profile.groq_api_key);
+            localStorage.setItem("groq_api_key", profile.groq_api_key);
+          }
+          setHasKey(true);
+        }
+      }
+
+      const storedElKey = localStorage.getItem("elevenlabs_api_key");
+      if (storedElKey) {
+        setElApiKey(storedElKey);
+        setHasElKey(true);
+      }
+      setLoading(false);
+    })();
+  }, [user]);
+
+  const saveKey = async () => {
     if (!apiKey.trim().startsWith("gsk_")) {
       toast({ title: "Invalid key", description: "Groq API keys start with 'gsk_'", variant: "destructive" });
       return;
     }
     setSaving(true);
     
-    // Save to local storage instead of Supabase
-    localStorage.setItem("groq_api_key", apiKey.trim());
+    const trimmedKey = apiKey.trim();
+
+    // Save to localStorage (for immediate local use)
+    localStorage.setItem("groq_api_key", trimmedKey);
+
+    // ALSO save to Supabase profiles (so Reader & pre-generation can access it)
+    if (user) {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ groq_api_key: trimmedKey })
+        .eq("user_id", user.id);
+      if (error) {
+        console.warn("Failed to save key to profiles:", error.message);
+        toast({ title: "Key saved locally", description: "Note: cloud sync failed — key works on this device only.", variant: "destructive" });
+      } else {
+        toast({ title: "API key saved! ✅", description: "Saved to your profile. Works across all your devices." });
+      }
+    } else {
+      toast({ title: "API key saved locally! ✅", description: "Sign in to sync across devices." });
+    }
+
     setHasKey(true);
-    toast({ title: "API key saved! ✅", description: "You can now use Groq Orpheus TTS." });
-    
     setSaving(false);
   };
 
-  const removeKey = () => {
+  const removeKey = async () => {
     setSaving(true);
     localStorage.removeItem("groq_api_key");
+
+    // Also remove from Supabase profiles
+    if (user) {
+      await supabase
+        .from("profiles")
+        .update({ groq_api_key: null })
+        .eq("user_id", user.id);
+    }
+
     setApiKey("");
     setHasKey(false);
     toast({ title: "API key removed" });

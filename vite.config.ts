@@ -74,11 +74,11 @@ function groqTtsProxy(): Plugin {
         for await (const chunk of req) bodyChunks.push(Buffer.from(chunk));
         const body = JSON.parse(Buffer.concat(bodyChunks).toString());
 
-        // Use user-provided key first, fall back to server env
-        const key = body.apiKey || process.env.GROQ_TTS;
+        // Each user provides their own key — no shared server key
+        const key = body.apiKey;
         if (!key) {
-          res.writeHead(400, { "Content-Type": "application/json" });
-          res.end(JSON.stringify({ error: "No Groq API key provided. Please add your key in Settings or .env." }));
+          res.writeHead(401, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "No API key provided. Add your Groq API key in Settings." }));
           return;
         }
 
@@ -93,7 +93,7 @@ function groqTtsProxy(): Plugin {
           const input = text.slice(0, 4096);
 
           // Step 1: Generate TTS audio
-          const groqBaseUrl = process.env.GROQ_BASEURL || "https://api.groq.com/openai/v1/audio/speech";
+          const groqBaseUrl = "https://api.groq.com/openai/v1/audio/speech";
           const ttsRes = await fetch(groqBaseUrl, {
             method: "POST",
             headers: {
@@ -206,16 +206,17 @@ function groqPageAudioProxy(): Plugin {
           return;
         }
 
-        const key = apiKey || process.env.GROQ_TTS;
+        // Each user provides their own key — no shared server key
+        const key = apiKey;
         if (!key) {
           res.writeHead(401, { "Content-Type": "application/json" });
-          res.end(JSON.stringify({ error: "No TTS API key configured." }));
+          res.end(JSON.stringify({ error: "No API key provided. Add your Groq API key in Settings." }));
           return;
         }
 
         try {
           const input = text.slice(0, 4096);
-          const groqBaseUrl = process.env.GROQ_BASEURL || "https://api.groq.com/openai/v1/audio/speech";
+          const groqBaseUrl = "https://api.groq.com/openai/v1/audio/speech";
 
           // Generate TTS
           const ttsRes = await fetch(groqBaseUrl, {

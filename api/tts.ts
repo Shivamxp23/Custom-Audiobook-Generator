@@ -83,12 +83,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return;
     }
 
-    const groqKey = apiKey || process.env.GROQ_TTS;
-    const groqBaseUrl = process.env.GROQ_BASEURL || "https://api.groq.com/openai/v1/audio/speech";
+    // Each user MUST provide their own API key — no shared server key
+    const groqKey = apiKey;
+    const groqBaseUrl = "https://api.groq.com/openai/v1/audio/speech";
 
     if (!groqKey) {
       res.status(401).json({
-        error: "No TTS API key configured. Check GROQ_TTS in .env or provide your personal key.",
+        error: "No API key provided. Add your Groq API key in Settings.",
         fallbackToBrowser: true,
       });
       return;

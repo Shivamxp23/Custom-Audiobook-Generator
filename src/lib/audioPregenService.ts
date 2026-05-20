@@ -279,6 +279,9 @@ class AudioPregenService {
     const key = `${this.bookId}:${pageNumber}`;
 
     try {
+      // Use the provided apiKey, or fall back to localStorage
+      const effectiveKey = this.apiKey || localStorage.getItem("groq_api_key") || "";
+
       // ── Step 1: Generate audio via server-side TTS proxy ──
       const resp = await fetch("/api/generate-page-audio", {
         method: "POST",
@@ -288,7 +291,7 @@ class AudioPregenService {
           pageNumber,
           text: pageData.text,
           voice: this.voice,
-          apiKey: this.apiKey || undefined,
+          apiKey: effectiveKey || undefined,
           userId: this.userId,
         }),
         signal: this.abortController?.signal,
@@ -296,7 +299,17 @@ class AudioPregenService {
 
       if (!resp.ok) {
         const errData = await resp.json().catch(() => ({ error: "Unknown" }));
-        console.warn(`[AudioPregen] TTS API failed for page ${pageNumber}:`, errData.error);
+        console.warn(`[AudioPregen] TTS API failed for page ${pageNumber} (${resp.status}):`, errData.error);
+        
+        if (resp.status === 401) {
+          // Auth error — no valid API key. Stop the entire queue.
+          console.error("[AudioPregen] 401 Unauthorized — no valid API key. Stopping pre-generation.");
+          this.isRunning = false;
+          this.queue = [];
+          this.notifyProgress(pageNumber, "error");
+          return false;
+        }
+        
         if (resp.status === 429) {
           this.queue.unshift(pageNumber);
           await new Promise(r => setTimeout(r, 15_000));

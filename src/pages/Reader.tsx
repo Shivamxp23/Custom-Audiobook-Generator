@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   ChevronLeft, ChevronRight, Play, Pause, ArrowLeft, Loader2,
-  Volume2, Settings2, Disc3,
+  Volume2, Settings2, Disc3, AlertCircle,
 } from "lucide-react";
 import { extractPdfPages, extractEpubPages, PageText } from "@/lib/textExtract";
 import PdfPageRenderer from "@/components/PdfPageRenderer";
@@ -122,7 +122,22 @@ export default function Reader() {
       setBook(b);
 
       const { data: profile } = await supabase.from("profiles").select("groq_api_key").eq("user_id", user.id).single();
-      if (profile?.groq_api_key) setPersonalApiKey(profile.groq_api_key);
+      
+      // Check BOTH Supabase profiles AND localStorage for the API key
+      const profileKey = profile?.groq_api_key || "";
+      const localKey = localStorage.getItem("groq_api_key") || "";
+      const resolvedApiKey = profileKey || localKey;
+      
+      if (resolvedApiKey) {
+        setPersonalApiKey(resolvedApiKey);
+        // Sync: if one source has it but not the other, fix it
+        if (profileKey && !localKey) {
+          localStorage.setItem("groq_api_key", profileKey);
+        }
+        if (localKey && !profileKey && user) {
+          supabase.from("profiles").update({ groq_api_key: localKey }).eq("user_id", user.id).then(() => {});
+        }
+      }
 
       const savedPage = b.current_page || 1;
       const savedWordIdx = b.current_word_index || 0;
@@ -156,16 +171,19 @@ export default function Reader() {
       await supabase.from("books").update({ last_opened_at: new Date().toISOString() }).eq("id", id);
 
       // Start background audio pre-generation
-      const apiKey = profile?.groq_api_key || "";
       const bookVoice = b.voice_description && Object.keys(GROQ_VOICE_PRESETS).includes(b.voice_description)
         ? b.voice_description : "daniel";
       
+      if (!resolvedApiKey) {
+        console.warn("[Reader] No Groq API key found — pre-generation will rely on server env var GROQ_TTS");
+      }
+
       audioPregenService.start(
         id,
         user.id,
         extracted.map(p => ({ page: p.page, text: p.text, words: p.words })),
         bookVoice,
-        apiKey,
+        resolvedApiKey,
         (progress) => setPregenProgress(progress)
       );
 
@@ -406,6 +424,23 @@ export default function Reader() {
               style={{ width: `${Math.round((pregenProgress.completedPages / pregenProgress.totalPages) * 100)}%` }}
             />
           </div>
+        </div>
+      )}
+
+      {/* Pre-generation error (e.g., 401 — no API key) */}
+      {pregenProgress && pregenProgress.status === "error" && (
+        <div className="flex items-center gap-2 px-3 py-2 mb-2 rounded-lg bg-destructive/10 border border-destructive/20 text-xs">
+          <AlertCircle className="w-4 h-4 text-destructive shrink-0" />
+          <span className="text-destructive">
+            Pre-generation failed — check your Groq API key in{" "}
+            <button
+              className="underline underline-offset-2 font-medium"
+              onClick={() => navigate("/settings")}
+            >
+              Settings
+            </button>.
+            Audio will still play in real-time.
+          </span>
         </div>
       )}
 
